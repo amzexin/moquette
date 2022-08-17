@@ -77,7 +77,10 @@ class CNode {
     }
 
     CNode copy() {
-        return new CNode(this.token, this.children, this.subscriptions);
+        long start = System.nanoTime();
+        CNode cNode = new CNode(this.token, this.children, this.subscriptions);
+        HandleTimeUtil.setHandleTime(HandleTimeUtil.getHandleTime() + (System.nanoTime() - start));
+        return cNode;
     }
 
     public void add(INode newINode) {

@@ -18,16 +18,15 @@ package io.moquette.broker.subscriptions;
 
 import io.netty.handler.codec.mqtt.MqttQoS;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static io.moquette.broker.subscriptions.Topic.asTopic;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CTrieTest {
 
@@ -302,4 +301,27 @@ public class CTrieTest {
         assertThat(matchingSubs3).contains(expectedMatchingsub1);
         assertThat(matchingSubs4).doesNotContain(expectedMatchingsub2);
     }
+
+    @Disabled("An extremely time-consuming process.")
+    @Test
+    public void testAdd620kSubscribe() {
+        List<Subscription> subscriptionList = new ArrayList<>();
+        for (int i = 0; i < 620000; i++) {
+            Topic topic = asTopic("topic/test/" + new Random().nextInt(10) + "/test");
+            subscriptionList.add(new Subscription("TestClient-" + i, topic, MqttQoS.AT_LEAST_ONCE));
+        }
+
+        HandleTimeUtil.setHandleTime(0L);
+
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < subscriptionList.size(); i++) {
+            Subscription subscription = subscriptionList.get(i);
+            sut.addToTree(subscription);
+            if (i % 10000 == 0) {
+                System.out.println("added " + i + " subscriptions handle time is " + (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start)) + " s");
+                System.out.println("CNode.copy handle time is " + TimeUnit.NANOSECONDS.toSeconds(HandleTimeUtil.getHandleTime()) + "s");
+            }
+        }
+    }
+
 }
