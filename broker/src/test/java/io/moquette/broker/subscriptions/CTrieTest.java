@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 
 import static io.moquette.broker.subscriptions.Topic.asTopic;
@@ -311,15 +312,56 @@ public class CTrieTest {
             subscriptionList.add(new Subscription("TestClient-" + i, topic, MqttQoS.AT_LEAST_ONCE));
         }
 
-        HandleTimeUtil.setHandleTime(0L);
-
         long start = System.currentTimeMillis();
         for (int i = 0; i < subscriptionList.size(); i++) {
             Subscription subscription = subscriptionList.get(i);
             sut.addToTree(subscription);
             if (i % 10000 == 0) {
                 System.out.println("added " + i + " subscriptions handle time is " + (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start)) + " s");
-                System.out.println("CNode.copy handle time is " + TimeUnit.NANOSECONDS.toSeconds(HandleTimeUtil.getHandleTime()) + "s");
+                HandleTimeUtil.printResult();
+            }
+        }
+    }
+
+    @Disabled("not a case")
+    @Test
+    public void testCNodeCopyForInsertSubscription() {
+        List<Subscription> subscriptionList = new ArrayList<>();
+        for (int i = 0; i < 620000; i++) {
+            Topic topic = asTopic("topic/test/" + new Random().nextInt(10) + "/test");
+            subscriptionList.add(new Subscription("TestClient-" + i, topic, MqttQoS.AT_LEAST_ONCE));
+        }
+
+        long start = System.currentTimeMillis();
+        Set<Subscription> subscriptions = new HashSet<>();
+        for (int i = 0; i < subscriptionList.size(); i++) {
+            Subscription subscription = subscriptionList.get(i);
+            subscriptions = new HashSet<>(subscriptions);
+            subscriptions.add(subscription);
+            if (i % 10000 == 0) {
+                System.out.println("added " + i + " subscriptions handle time is " + (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start)) + " s");
+            }
+        }
+    }
+
+    @Disabled("not a case")
+    @Test
+    public void testCNodeCopyForAddChild() {
+        List<INode> inodeList = new ArrayList<>();
+        for (int i = 0; i < 620000; i++) {
+            CNode cNode = new CNode();
+            cNode.setToken(new Token("topic/" + i));
+            inodeList.add(new INode(cNode));
+        }
+
+        long start = System.currentTimeMillis();
+        List<INode> children = new ArrayList<>();
+        for (int i = 0; i < inodeList.size(); i++) {
+            INode inode = inodeList.get(i);
+            children = new ArrayList<>(children);
+            children.add(inode);
+            if (i % 10000 == 0) {
+                System.out.println("added " + i + " children handle time is " + (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start)) + " s");
             }
         }
     }

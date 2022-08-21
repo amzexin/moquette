@@ -31,8 +31,13 @@ class CNode {
     //Copy constructor
     private CNode(Token token, List<INode> children, Set<Subscription> subscriptions) {
         this.token = token; // keep reference, root comparison in directory logic relies on it for now.
+        long start = System.nanoTime();
         this.subscriptions = new HashSet<>(subscriptions);
+        HandleTimeUtil.addHandleTime("new HashSet",System.nanoTime() - start);
+
+        start = System.nanoTime();
         this.children = new ArrayList<>(children);
+        HandleTimeUtil.addHandleTime("new ArrayList",System.nanoTime() - start);
     }
 
     public Token getToken() {
@@ -79,7 +84,7 @@ class CNode {
     CNode copy() {
         long start = System.nanoTime();
         CNode cNode = new CNode(this.token, this.children, this.subscriptions);
-        HandleTimeUtil.setHandleTime(HandleTimeUtil.getHandleTime() + (System.nanoTime() - start));
+        HandleTimeUtil.addHandleTime("new CNode", System.nanoTime() - start);
         return cNode;
     }
 
