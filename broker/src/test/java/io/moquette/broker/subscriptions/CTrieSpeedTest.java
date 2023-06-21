@@ -18,6 +18,9 @@ package io.moquette.broker.subscriptions;
 import static io.moquette.broker.subscriptions.Topic.asTopic;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import io.netty.handler.codec.mqtt.MqttQoS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.slf4j.Logger;
@@ -47,6 +50,18 @@ public class CTrieSpeedTest {
     public void testDeep() {
         List<Subscription> results = prepareSubscriptionsDeep();
         createSubscriptions(results);
+    }
+
+    @Test
+    public void testIssue629Case(){
+        CTrie tree = new CTrie();
+        List<Subscription> subscriptionList = new ArrayList<>();
+        for (int i = 0; i < 620000; i++) {
+            Topic topic = asTopic("topic/test/" + new Random().nextInt(10) + "/test");
+            subscriptionList.add(new Subscription("TestClient-" + i, topic, MqttQoS.AT_LEAST_ONCE));
+        }
+
+        createSubscriptions(subscriptionList);
     }
 
     public void createSubscriptions(List<Subscription> results) {
